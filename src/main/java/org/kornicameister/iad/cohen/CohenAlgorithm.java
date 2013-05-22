@@ -8,8 +8,8 @@ import java.util.List;
  * @since 0.0.1
  */
 
-public interface CohenSOM {
+public interface CohenAlgorithm {
     void process();
-
-    void updateWeights();
+    List<CohenPoint> drawNeurons();
+    void updatePositions();
 }

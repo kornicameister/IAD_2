@@ -1,9 +1,11 @@
 package org.kornicameister.iad.cohen;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
+import org.kornicameister.iad.cohen.abstracts._CohenNetwork;
+import org.kornicameister.iad.cohen.util.CohenUtilities;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * @author kornicameister
@@ -11,72 +13,41 @@ import java.util.*;
  * @since 0.0.1
  */
 
-public class CohenNetwork {
-    private static final String TEACHER = "org.kornicameister.iad.cohen.teacher";
-    private static final String K_TO_DRAW = "org.kornicameister.iad.cohen.kToDraw";
-    private static final String METRIC = "org.kornicameister.iad.cohen.distanceMetric";
-    private static final String ITERATIONS = "org.kornicameister.iad.cohen.iterations";
-    private static final String DELTA = "org.kornicameister.iad.cohen.delta";
-    private static Properties cohenProperties;
+abstract public class CohenNetwork
+        extends _CohenNetwork
+        implements CohenAlgorithm {
+    /**
+     * CohenAlgorithm implementation, strategy pattern
+     */
+    protected final CohenAlgorithm cohenAlgorithm;
+    protected List<CohenPoint> input;
+    protected List<CohenPoint> normalizedInput;
 
-    static {
-        CohenNetwork.cohenProperties = new Properties();
-        try {
-            CohenNetwork.cohenProperties.load(new FileReader(new File("/cohen.properties")));
-        } catch (IOException e) {
-            System.err.println(e);
-            cohenProperties.setProperty(CohenNetwork.TEACHER, "org.kornicameister.iad.cohen.teacher.impl.CohenAutoAssociationTeacher");
-            cohenProperties.setProperty(CohenNetwork.K_TO_DRAW, "10");
-            cohenProperties.setProperty(CohenNetwork.ITERATIONS, "1000");
-            cohenProperties.setProperty(CohenNetwork.METRIC, null);
-            cohenProperties.setProperty(CohenNetwork.DELTA, "0.25");
-        }
+    public CohenNetwork(final CohenAlgorithm cohenAlgorithm) {
+        this.cohenAlgorithm = cohenAlgorithm;
     }
 
-    private List<CohenPoint> input;
-    private List<CohenPoint> normalizedInput;
-
-    public static CohenPoint normalizePoint(final CohenPoint cohenPoint, final double normalizingFactory) {
-        Double[] normalizedLoc = cohenPoint.getLocation().clone();
-        for (int i = 0 ; i < cohenPoint.getLocation().length ; i++) {
-            normalizedLoc[i] = normalizedLoc[i] / normalizingFactory;
-        }
-        CohenPoint point = new CohenPoint(cohenPoint.getTeacher(), normalizedLoc);
-        return point;
+    public CohenNetwork(final List<CohenPoint> input, final CohenAlgorithm cohenAlgorithm) {
+        this(cohenAlgorithm);
+        this.setInput(input);
     }
 
     public void setInput(List<CohenPoint> input) {
         this.input = input;
-        this.normalizedInput = this.normalizeInput();
+        this.normalizedInput = CohenUtilities.normalizePoints(this.input);
     }
 
-    private List<CohenPoint> normalizeInput() {
-        List<CohenPoint> normalizedInput = new ArrayList<>();
-        double powerSum = 0.0;
-        for (CohenPoint cohenPoint : this.input) {
-            for (Double loc : cohenPoint.getLocation()) {
-                powerSum += Math.pow(loc, 2);
-            }
-            normalizedInput.add(CohenNetwork.normalizePoint(cohenPoint, Math.sqrt(powerSum)));
-            powerSum = 0.0;
-        }
-        return normalizedInput;
-    }
-
-    protected CohenPoint findWinner(final List<CohenPoint> drawnPoints) {
-        CohenPoint winner = null;
-        return null;
-    }
-
-    protected List<CohenPoint> drawNeurons(final int kPoints) {
+    @Override
+    public List<CohenPoint> drawNeurons() {
         final Random seed = new Random();
         final List<CohenPoint> cohenPointList = new ArrayList<>();
-        final Double delta = Double.valueOf(CohenNetwork.cohenProperties.getProperty(CohenNetwork.DELTA));
+        final Double delta = Double.valueOf(CohenNetwork.getProperty(CohenNetwork.DELTA));
+        final int neurons = Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW));
 
         CohenPoint toBeModified;
         Double[] location;
 
-        for (int i = 0 ; i < kPoints ; i++) {
+        for (int i = 0 ; i < neurons ; i++) {
             toBeModified = (CohenPoint) this.input.get(seed.nextInt(this.input.size())).clone();
             location = toBeModified.getLocation();
             for (int k = 0 ; k < location.length ; k++) {
