@@ -11,6 +11,10 @@ import org.kornicameister.iad.kmeans.impl.CPoint;
 public class CohenPoint extends CPoint {
     private CohenTeacher cohenTeacher;
 
+    public CohenPoint(final Double... loc) {
+        super(loc);
+    }
+
     public CohenPoint(final CohenTeacher cohenTeacher, final Double... loc) {
         super(loc);
         this.cohenTeacher = cohenTeacher;

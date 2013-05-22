@@ -3,6 +3,9 @@ package org.kornicameister.iad.kmeans.impl;
 import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.kornicameister.iad.cohen.CohenPoint;
+import org.kornicameister.iad.cohen.FileLoader;
+import org.kornicameister.iad.cohen.loader.DefaultCohenFileReader;
 import org.kornicameister.iad.kmeans.Clusterable;
 import org.kornicameister.iad.kmeans.helpers.impl.ByDistanceClusterAssignAgent;
 import org.kornicameister.iad.kmeans.helpers.impl.EpsilonClusterChecker;
@@ -10,8 +13,6 @@ import org.kornicameister.iad.kmeans.helpers.impl.EpsilonClusterChecker;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.kornicameister.iad.util.RandomDouble.nextDouble;
 
 /**
  * @author kornicamaister
@@ -24,12 +25,11 @@ public class KMeansClusterTest {
     @Before
     public void setUp() throws Exception {
         final int numPoints = 500;
-        List<Clusterable> points = new ArrayList<>(numPoints);
+        List<CohenPoint> pointList = FileLoader.load("data/165535-2.txt", new DefaultCohenFileReader(0, 1, 8), ' ');
+        List<Clusterable> points = new ArrayList<>(pointList.size());
 
-        for (int i = 1; i <= numPoints; i++) {
-            double x = nextDouble(-1, (double) i);
-            double y = nextDouble(-1, (double) i);
-            points.add(new CPoint(x, y));
+        for(CohenPoint point : pointList){
+            points.add(point);
         }
 
         this.points = points;
@@ -38,7 +38,7 @@ public class KMeansClusterTest {
     @Test
     public void testGetNewClusters() throws Exception {
         final int initialClustersCount = 5;
-        final int maxClustering = 100;
+        final int maxClustering = 20;
         KMeansCluster meansCluster = new KMeansCluster(
                 new EpsilonClusterChecker(0.0005d),
                 new ByDistanceClusterAssignAgent(),

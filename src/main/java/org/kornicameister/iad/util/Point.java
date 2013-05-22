@@ -2,6 +2,8 @@ package org.kornicameister.iad.util;
 
 import com.google.common.base.Objects;
 
+import java.util.Arrays;
+
 
 /**
  * @author kornicamaister
@@ -82,7 +84,7 @@ public class Point implements Comparable<Point>, Cloneable {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                .add("position", position)
+                .add("position", Arrays.toString(position))
                 .toString();
     }
 

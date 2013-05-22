@@ -1,5 +1,7 @@
 package org.kornicameister.iad.cohen.abstracts;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,6 +21,8 @@ public abstract class _CohenNetwork {
     protected static final String METRIC = "org.kornicameister.iad.cohen.distanceMetric";
     protected static final String ITERATIONS = "org.kornicameister.iad.cohen.iterations";
     protected static final String DELTA = "org.kornicameister.iad.cohen.delta";
+    private static final String COHEN_PROPERTIES = "src/main/resources/cohen.properties";
+    private static final Logger LOGGER = Logger.getLogger(_CohenNetwork.class);
     private static Properties cohenProperties;
 
     public static String getProperty(final String key) {
@@ -46,9 +50,10 @@ public abstract class _CohenNetwork {
     static {
         _CohenNetwork.cohenProperties = new Properties();
         try {
-            _CohenNetwork.cohenProperties.load(new FileReader(new File("/cohen.properties")));
-        } catch (IOException e) {
-            System.err.println(e);
+            LOGGER.debug(String.format("Loading properties from %s", COHEN_PROPERTIES));
+            _CohenNetwork.cohenProperties.load(new FileReader(new File(COHEN_PROPERTIES)));
+        } catch (IOException exception) {
+            LOGGER.warn("Could not load properties, defaults will be used", exception);
         }
     }
 

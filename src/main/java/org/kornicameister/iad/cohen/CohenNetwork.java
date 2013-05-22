@@ -19,16 +19,11 @@ abstract public class CohenNetwork
     /**
      * CohenAlgorithm implementation, strategy pattern
      */
-    protected final CohenAlgorithm cohenAlgorithm;
     protected List<CohenPoint> input;
     protected List<CohenPoint> normalizedInput;
 
-    public CohenNetwork(final CohenAlgorithm cohenAlgorithm) {
-        this.cohenAlgorithm = cohenAlgorithm;
-    }
 
-    public CohenNetwork(final List<CohenPoint> input, final CohenAlgorithm cohenAlgorithm) {
-        this(cohenAlgorithm);
+    public CohenNetwork(final List<CohenPoint> input) {
         this.setInput(input);
     }
 
