@@ -22,7 +22,8 @@ public class CohenPoint extends CPoint {
 
     @Override
     public Object clone() {
-        CohenPoint point = (CohenPoint) super.clone();
+        CohenPoint point = new CohenPoint();
+        point.position = this.position.clone();
         point.cohenTeacher = this.cohenTeacher;
         return point;
     }

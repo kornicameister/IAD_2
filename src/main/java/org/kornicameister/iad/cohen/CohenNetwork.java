@@ -48,6 +48,7 @@ abstract public class CohenNetwork
             for (int k = 0 ; k < location.length ; k++) {
                 location[k] += delta * location[k];
             }
+            cohenPointList.add(new CohenPoint(location));
         }
 
         return cohenPointList;

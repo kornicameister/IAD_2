@@ -11,7 +11,6 @@ import org.kornicameister.iad.kmeans.helpers.impl.ByDistanceClusterAssignAgent;
 import org.kornicameister.iad.kmeans.helpers.impl.EpsilonClusterChecker;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,7 +23,6 @@ public class KMeansClusterTest {
 
     @Before
     public void setUp() throws Exception {
-        final int numPoints = 500;
         List<CohenPoint> pointList = FileLoader.load("data/165535-2.txt", new DefaultCohenFileReader(0, 1, 8), ' ');
         List<Clusterable> points = new ArrayList<>(pointList.size());
 
@@ -46,11 +44,5 @@ public class KMeansClusterTest {
         );
         Cluster[] clusters = meansCluster.cluster(this.points, initialClustersCount);
         Assert.assertTrue("No clusters returned", clusters.length >= 1);
-        for (Cluster cluster : clusters) {
-            for (Clusterable clusterable : cluster.getClusterableList()) {
-                System.out.println(String.format("Cluster id=[%d], location=%s", cluster.getId(), Arrays.toString(clusterable.getLocation())));
-            }
-            System.out.println();
-        }
     }
 }

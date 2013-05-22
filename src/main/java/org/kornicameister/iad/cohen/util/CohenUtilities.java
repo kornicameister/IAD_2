@@ -15,7 +15,6 @@ import java.util.List;
 
 public class CohenUtilities {
     public static List<CohenPoint> normalizePoints(final List<CohenPoint> cohenPoints) {
-
         List<CohenPoint> normalizedInput = new ArrayList<>();
         double powerSum = 0.0;
         for (CohenPoint cohenPoint : cohenPoints) {

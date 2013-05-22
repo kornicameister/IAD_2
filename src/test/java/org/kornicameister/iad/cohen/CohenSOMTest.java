@@ -3,8 +3,9 @@ package org.kornicameister.iad.cohen;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.kornicameister.iad.cohen.loader.DefaultCohenFileReader;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author kornicameister
@@ -18,7 +19,8 @@ public class CohenSOMTest {
 
     @Before
     public void setUp() throws Exception {
-        this.cohenAlgorithm = new CohenSOM(new ArrayList<CohenPoint>());
+        List<CohenPoint> pointList = FileLoader.load("data/165535-2.txt", new DefaultCohenFileReader(0, 1, 8), ' ');
+        this.cohenAlgorithm = new CohenSOM(pointList);
     }
 
     @Test
@@ -33,7 +35,9 @@ public class CohenSOMTest {
 
     @Test
     public void testDrawNeurons() throws Exception {
-
+        List<CohenPoint> pointList = this.cohenAlgorithm.drawNeurons();
+        Assert.assertNotNull("Null drawnNeurons", pointList);
+        Assert.assertTrue("Empty drawnNeurons", pointList.size() > 0);
     }
 
     @Test
