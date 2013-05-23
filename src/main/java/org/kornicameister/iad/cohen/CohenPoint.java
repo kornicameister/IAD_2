@@ -1,6 +1,5 @@
 package org.kornicameister.iad.cohen;
 
-import org.kornicameister.iad.cohen.teachers.CohenTeacher;
 import org.kornicameister.iad.kmeans.impl.CPoint;
 
 /**
@@ -9,26 +8,15 @@ import org.kornicameister.iad.kmeans.impl.CPoint;
  * @since 0.0.1
  */
 public class CohenPoint extends CPoint {
-    private CohenTeacher cohenTeacher;
 
     public CohenPoint(final Double... loc) {
         super(loc);
-    }
-
-    public CohenPoint(final CohenTeacher cohenTeacher, final Double... loc) {
-        super(loc);
-        this.cohenTeacher = cohenTeacher;
     }
 
     @Override
     public Object clone() {
         CohenPoint point = new CohenPoint();
         point.position = this.position.clone();
-        point.cohenTeacher = this.cohenTeacher;
         return point;
-    }
-
-    public CohenTeacher getTeacher() {
-        return cohenTeacher;
     }
 }

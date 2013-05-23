@@ -1,5 +1,7 @@
 package org.kornicameister.iad.cohen;
 
+import org.kornicameister.iad.util.Point;
+
 import java.util.List;
 
 /**
@@ -11,5 +13,5 @@ import java.util.List;
 public interface CohenAlgorithm {
     void process();
     List<CohenPoint> drawNeurons();
-    void updatePositions();
+    Point findWinner(final CohenPoint neuron);
 }

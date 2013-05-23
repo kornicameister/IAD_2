@@ -25,7 +25,7 @@ public class CohenSOMTest {
 
     @Test
     public void testProcess() throws Exception {
-
+        this.cohenAlgorithm.process();
     }
 
     @Test
@@ -42,6 +42,6 @@ public class CohenSOMTest {
 
     @Test
     public void testGetProperty() throws Exception {
-        Assert.assertNotNull(CohenNetwork.getProperty("org.kornicameister.iad.cohen.teacher"));
+        Assert.assertNotNull(CohenNetwork.getProperty("org.kornicameister.iad.cohen.neighbourFunction"));
     }
 }

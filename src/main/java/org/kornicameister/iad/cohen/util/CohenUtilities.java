@@ -3,6 +3,7 @@ package org.kornicameister.iad.cohen.util;
 import com.google.common.base.Preconditions;
 import org.kornicameister.iad.cohen.CohenPoint;
 import org.kornicameister.iad.util.DistanceUtils;
+import org.kornicameister.iad.util.Point;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +15,14 @@ import java.util.List;
  */
 
 public class CohenUtilities {
-    public static List<CohenPoint> normalizePoints(final List<CohenPoint> cohenPoints) {
+    public static List<CohenPoint> normalizePoints(final List<? extends Point> cohenPoints) {
         List<CohenPoint> normalizedInput = new ArrayList<>();
         double powerSum = 0.0;
-        for (CohenPoint cohenPoint : cohenPoints) {
-            for (Double loc : cohenPoint.getLocation()) {
+        for (Point cohenPoint : cohenPoints) {
+            for (Double loc : cohenPoint.getPosition()) {
                 powerSum += Math.pow(loc, 2);
             }
-            normalizedInput.add(CohenUtilities.getNormalizedValue(cohenPoint, Math.sqrt(powerSum)));
+            normalizedInput.add(CohenUtilities.getNormalizedValue((CohenPoint) cohenPoint, Math.sqrt(powerSum)));
             powerSum = 0.0;
         }
         return normalizedInput;
@@ -32,7 +33,7 @@ public class CohenUtilities {
         for (int i = 0 ; i < cohenPoint.getLocation().length ; i++) {
             normalizedLoc[i] = normalizedLoc[i] / normalizingValue;
         }
-        CohenPoint point = new CohenPoint(cohenPoint.getTeacher(), normalizedLoc);
+        CohenPoint point = new CohenPoint(normalizedLoc);
         return point;
     }
 
@@ -47,6 +48,17 @@ public class CohenUtilities {
                 sum += Math.pow(DistanceUtils.getEuclideanDistance(cohenPoint.getN(i), cohenPoint2.getN(i)), 2);
             }
             return Math.sqrt(sum);
+        }
+
+        public static double getScalarDistance(CohenPoint cohenPoint, CohenPoint cohenPoint2) {
+            Preconditions.checkArgument(cohenPoint.getPosition().length == cohenPoint2.getPosition().length,
+                    "Attempting to compare two CohenPoints of different dimensions");
+            double sum = 0;
+            final int length = cohenPoint.getPosition().length;
+            for (int i = 0 ; i < length ; i++) {
+                sum += cohenPoint.getN(i) * cohenPoint2.getN(i);
+            }
+            return sum;
         }
 
         public static double getManhattanDistance(CohenPoint cohenPoint, CohenPoint cohenPoint2) {

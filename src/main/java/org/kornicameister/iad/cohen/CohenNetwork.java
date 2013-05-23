@@ -1,11 +1,12 @@
 package org.kornicameister.iad.cohen;
 
 import org.kornicameister.iad.cohen.abstracts._CohenNetwork;
+import org.kornicameister.iad.cohen.distance.CohenDistance;
+import org.kornicameister.iad.cohen.neighbourhood.CohenNeighbourhoodFunction;
 import org.kornicameister.iad.cohen.util.CohenUtilities;
+import org.kornicameister.iad.util.Point;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * @author kornicameister
@@ -16,15 +17,16 @@ import java.util.Random;
 abstract public class CohenNetwork
         extends _CohenNetwork
         implements CohenAlgorithm {
-    /**
-     * CohenAlgorithm implementation, strategy pattern
-     */
-    protected List<CohenPoint> input;
-    protected List<CohenPoint> normalizedInput;
+    protected final CohenNeighbourhoodFunction neighbourhoodFunction;
+    protected final CohenDistance cohenDistance;
+    protected List<? extends Point> input;
+    protected List<? extends Point> normalizedInput;
 
 
     public CohenNetwork(final List<CohenPoint> input) {
         this.setInput(input);
+        this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
+        this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
     }
 
     public void setInput(List<CohenPoint> input) {
@@ -53,4 +55,40 @@ abstract public class CohenNetwork
 
         return cohenPointList;
     }
+
+    @Override
+    public CohenPoint findWinner(final CohenPoint neuron) {
+        List<Point> cohenPoints = new ArrayList<>(this.input);
+        Collections.sort(cohenPoints, new Comparator<Point>() {
+            @Override
+            public int compare(final Point o1, final Point o2) {
+                Double o1D = CohenUtilities.DistanceMetrics.getEuclideanDistance((CohenPoint) o1, neuron);
+                Double o2D = CohenUtilities.DistanceMetrics.getEuclideanDistance((CohenPoint) o2, neuron);
+                return o1D.compareTo(o2D);
+            }
+        });
+        return (CohenPoint) cohenPoints.get(0);
+    }
+
+    protected List<CohenPoint> findNeighbours(final CohenPoint winner) {
+        final double radius = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS));
+        final List<CohenPoint> neighbours = new ArrayList<>();
+        List<Point> cohenPoints = new ArrayList<>(this.input);
+        Collections.sort(cohenPoints, new Comparator<Point>() {
+            @Override
+            public int compare(final Point o1, final Point o2) {
+                Double o1D = cohenDistance.distance((CohenPoint) o1, winner);
+                Double o2D = cohenDistance.distance((CohenPoint) o2, winner);
+                return o1D.compareTo(o2D);
+            }
+        });
+        for (Point point : cohenPoints) {
+            if (cohenDistance.distance((CohenPoint) point, winner) <= radius && !winner.equals(point)) {
+                neighbours.add((CohenPoint) point);
+            }
+        }
+        return neighbours;
+    }
+
+    public abstract void updatePositions(final CohenPoint neuron, final CohenPoint winner, final List<CohenPoint> neighbours);
 }
