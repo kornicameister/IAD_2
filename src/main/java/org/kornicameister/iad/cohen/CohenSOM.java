@@ -9,9 +9,34 @@ import java.util.Random;
 
 public class CohenSOM extends CohenNetwork {
     private static final Logger LOGGER = Logger.getLogger(CohenSOM.class);
+    private String outputPrefix = "output/cohen_som/";
+    private String fileNamePattern = "it_%d.data";
 
     public CohenSOM(final List<CohenPoint> input) {
         super(input);
+    }
+
+    public CohenSOM(final List<CohenPoint> cohenPoints, final boolean skipAuto) {
+        super(cohenPoints, skipAuto);
+    }
+
+    public CohenSOM(final List<CohenPoint> input, final boolean skipAuto, final boolean readProp) {
+        super(input, skipAuto, readProp);
+    }
+
+    public static CohenSOM getCohenSOM(final List<CohenPoint> input,
+                                       final List<CohenNeuron> neurons,
+                                       final String outputPrefix,
+                                       final String fileNamePattern) {
+        CohenSOM cohenSOM = new CohenSOM(input, true, true);
+        cohenSOM.input = input;
+        cohenSOM.neurons = neurons;
+        cohenSOM.outputPrefix = outputPrefix;
+        if (!cohenSOM.outputPrefix.endsWith("/")) {
+            cohenSOM.outputPrefix += "/";
+        }
+        cohenSOM.fileNamePattern = fileNamePattern;
+        return cohenSOM;
     }
 
     @Override
@@ -51,20 +76,7 @@ public class CohenSOM extends CohenNetwork {
         CohenNeuron winningNeuron;
         List<CohenNeuron> neighbours;
 
-        try {
-            GnuplotSaver.saveToFile(String.format("output/cohen_som/it_%d.data", it++), this.input);
-        } catch (IOException e) {
-            LOGGER.warn("Failed to save points to file", e);
-        }
-
         do {
-
-            try {
-                GnuplotSaver.saveToFile(String.format("output/cohen_som/it_%d.data", it), this.neurons);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to save points to file", e);
-            }
-
             randomPoint = this.input.get(seed.nextInt(size));
             winningNeuron = this.findWinner(randomPoint, this.neurons);
             neighbours = this.findNeighbours(winningNeuron);
@@ -76,6 +88,11 @@ public class CohenSOM extends CohenNetwork {
         } while (onceAgain && (it++) <= iterations);
         for (CohenNeuron neuron : this.neurons) {
             LOGGER.info(String.format("Neuron [id=%d] has won %d times", neuron.getId(), neuron.getWonCount()));
+        }
+        try {
+            GnuplotSaver.saveToFile(String.format(this.outputPrefix + this.fileNamePattern, it), this.neurons);
+        } catch (IOException e) {
+            LOGGER.warn("Failed to save points to file", e);
         }
     }
 

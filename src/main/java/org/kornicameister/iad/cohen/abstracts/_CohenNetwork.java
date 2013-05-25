@@ -21,6 +21,7 @@ public abstract class _CohenNetwork {
     protected static final String ITERATIONS = "org.kornicameister.iad.cohen.iterations";
     protected static final String DELTA = "org.kornicameister.iad.cohen.delta";
     protected static final String NEIGHBOUR_RADIUS = "org.kornicameister.iad.cohen.neighbourRadius";
+    protected static final String NEIGHBOUR_RADIUS_DECR = "org.kornicameister.iad.cohen.neighbourRadiusDecrement";
     protected static final String NEIGHBOUR_FUNCTION = "org.kornicameister.iad.cohen.neighbourFunction";
     protected static final String LEARNING_FACTOR = "org.kornicameister.iad.cohen.learningFactor";
     protected static final String NORMALIZE = "org.kornicameister.iad.cohen.normalize";
@@ -29,10 +30,19 @@ public abstract class _CohenNetwork {
     private static final String COHEN_PROPERTIES = "src/main/resources/cohen.properties";
     private static final Logger LOGGER = Logger.getLogger(_CohenNetwork.class);
     private static Properties cohenProperties;
+    protected final boolean reloadProperties;
+
+    protected _CohenNetwork(final boolean reloadProperties) {
+        this.reloadProperties = reloadProperties;
+        if (this.reloadProperties) {
+            _CohenNetwork.loadProperties();
+        }
+    }
 
     public static String getProperty(final String key) {
         return cohenProperties.getProperty(key, Defaults.defaultMap.get(key));
     }
+
 
     protected Object resolveObject(final String name) {
         Object object = null;
@@ -59,6 +69,7 @@ public abstract class _CohenNetwork {
         static final String DEFAULT_METRIC = "org.kornicameister.iad.cohen.distance.impl.EuclideanCohenDistance";
         static final String DEFAULT_DELTA = "0.25";
         static final String DEFAULT_NEIGHBOUR_RADIUS = "1";
+        static final String DEFAULT_NEIGHBOUR_RADIUS_DECR = "0.01";
         static final String DEFAULT_LEARNING_FACTOR = "0.7";
         static final String DEFAULT_NORMALIZE = "false";
         static final String DEFAULT_NEURON_THRESHOLD = "10";
@@ -77,10 +88,11 @@ public abstract class _CohenNetwork {
             defaultMap.put(_CohenNetwork.NORMALIZE, Defaults.DEFAULT_NORMALIZE);
             defaultMap.put(_CohenNetwork.NEURON_THRESHOLD, Defaults.DEFAULT_NEURON_THRESHOLD);
             defaultMap.put(_CohenNetwork.NETWORK_THRESHOLD, Defaults.DEFAULT_NETWORK_THRESHOLD);
+            defaultMap.put(_CohenNetwork.NEIGHBOUR_RADIUS_DECR, Defaults.DEFAULT_NEIGHBOUR_RADIUS_DECR);
         }
     }
 
-    static {
+    protected static void loadProperties() {
         _CohenNetwork.cohenProperties = new Properties();
         try {
             LOGGER.debug(String.format("Loading properties %s from %s", _CohenNetwork.cohenProperties.values(), COHEN_PROPERTIES));
@@ -90,4 +102,7 @@ public abstract class _CohenNetwork {
         }
     }
 
+    static {
+        _CohenNetwork.loadProperties();
+    }
 }

@@ -2,6 +2,7 @@ package org.kornicameister.iad.cohen;
 
 import com.google.common.base.Preconditions;
 import org.apache.log4j.Logger;
+import org.kornicameister.iad.cohen.loader.DefaultCohenFileReader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,5 +46,14 @@ public class FileLoader {
             LOGGER.debug(String.format("Loaded file %s", file));
         }
         return file;
+    }
+
+    public static List<CohenNeuron> loadAsNeurons(final String fileName, final DefaultCohenFileReader reader, final Character separator) {
+        List<CohenPoint> cohenPoints = new ArrayList<>(FileLoader.load(fileName, reader, separator));
+        List<CohenNeuron> neurons = new ArrayList<>();
+        for (CohenPoint point : cohenPoints) {
+            neurons.add(new CohenNeuron(point.getLocation()));
+        }
+        return neurons;
     }
 }

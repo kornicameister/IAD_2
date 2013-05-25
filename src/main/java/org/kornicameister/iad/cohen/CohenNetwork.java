@@ -6,6 +6,7 @@ import org.kornicameister.iad.cohen.distance.CohenDistance;
 import org.kornicameister.iad.cohen.neighbourhood.CohenNeighbourhoodFunction;
 import org.kornicameister.iad.cohen.util.CohenUtilities;
 import org.kornicameister.iad.util.Point;
+import org.kornicameister.iad.util.RandomDouble;
 
 import java.util.*;
 
@@ -23,13 +24,35 @@ abstract public class CohenNetwork
     protected final CohenDistance cohenDistance;
     protected List<CohenPoint> input;
     protected List<CohenNeuron> neurons;
+    protected double radius = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS));
 
 
     public CohenNetwork(final List<CohenPoint> input) {
+        super(false);
         this.setInput(input);
         this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
         this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
-        this.neurons = this.drawNeurons();
+        this.neurons = this.drawNeurons2();
+    }
+
+    public CohenNetwork(final List<CohenPoint> input, final boolean skipAuto) {
+        super(false);
+        this.setInput(input);
+        this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
+        this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        if (!skipAuto) {
+            this.neurons = this.drawNeurons2();
+        }
+    }
+
+    public CohenNetwork(final List<CohenPoint> input, final boolean skipAuto, final boolean readProp) {
+        super(readProp);
+        this.setInput(input);
+        this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
+        this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        if (!skipAuto) {
+            this.neurons = this.drawNeurons2();
+        }
     }
 
     public void setInput(List<CohenPoint> input) {
@@ -59,6 +82,41 @@ abstract public class CohenNetwork
                 location[k] += delta * location[k];
             }
             neuronList.add(new CohenNeuron(location));
+        }
+
+        return neuronList;
+    }
+
+    public List<CohenNeuron> drawNeurons2() {
+        final List<CohenNeuron> neuronList = new ArrayList<>();
+        final int neurons = Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW));
+
+        double maxX = Double.MIN_VALUE,
+                maxY = Double.MIN_VALUE,
+                minX = Double.MAX_VALUE,
+                minY = Double.MAX_VALUE;
+
+        for (CohenPoint point : this.input) {
+            if (point.getX() > maxX) {
+                maxX = point.getX();
+            }
+            if (point.getX() < minX) {
+                minX = point.getX();
+            }
+            if (point.getY() > maxY) {
+                maxY = point.getY();
+            }
+            if (point.getY() < minY) {
+                minY = point.getY();
+            }
+        }
+
+
+        for (int i = 0 ; i < neurons ; i++) {
+            neuronList.add(new CohenNeuron(
+                    RandomDouble.nextDouble(minX, maxX),
+                    RandomDouble.nextDouble(minY, maxY)
+            ));
         }
 
         return neuronList;
@@ -109,7 +167,7 @@ abstract public class CohenNetwork
     }
 
     protected List<CohenNeuron> findNeighbours(final CohenNeuron winningNeuron) {
-        final double radius = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS));
+        final double radiusDec = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS_DECR));
         final List<CohenNeuron> neighbours = new ArrayList<>();
         List<CohenNeuron> copy = new ArrayList<>(this.neurons);
         Collections.sort(copy, new Comparator<Point>() {
@@ -125,10 +183,17 @@ abstract public class CohenNetwork
                 neighbours.add(point);
             }
         }
+        if (radius - radiusDec > 0) {
+            radius -= radiusDec;
+        }
         return neighbours;
     }
 
     protected abstract void updatePositions(final CohenPoint closestPoint, final CohenPoint winningNeuron, final List<CohenNeuron> neighbours);
 
     protected abstract boolean checkAgainstQuantumError(final CohenNeuron winningNeuron);
+
+    public List<CohenNeuron> getNeurons() {
+        return neurons;
+    }
 }
