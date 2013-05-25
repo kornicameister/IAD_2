@@ -1,5 +1,6 @@
 package org.kornicameister.iad.cohen;
 
+import org.apache.log4j.Logger;
 import org.kornicameister.iad.cohen.abstracts._CohenNetwork;
 import org.kornicameister.iad.cohen.distance.CohenDistance;
 import org.kornicameister.iad.cohen.neighbourhood.CohenNeighbourhoodFunction;
@@ -17,27 +18,34 @@ import java.util.*;
 abstract public class CohenNetwork
         extends _CohenNetwork
         implements CohenAlgorithm {
+    private static final Logger LOGGER = Logger.getLogger(CohenNetwork.class);
     protected final CohenNeighbourhoodFunction neighbourhoodFunction;
     protected final CohenDistance cohenDistance;
-    protected List<? extends Point> input;
-    protected List<? extends Point> normalizedInput;
+    protected List<CohenPoint> input;
+    protected List<CohenNeuron> neurons;
 
 
     public CohenNetwork(final List<CohenPoint> input) {
         this.setInput(input);
         this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
         this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        this.neurons = this.drawNeurons();
     }
 
     public void setInput(List<CohenPoint> input) {
-        this.input = input;
-        this.normalizedInput = CohenUtilities.normalizePoints(this.input);
+        final Boolean normalize = Boolean.valueOf(CohenNetwork.getProperty(CohenNetwork.NORMALIZE));
+        LOGGER.info(String.format("Points normalization = %s", normalize));
+        if (normalize) {
+            this.input = CohenUtilities.normalizePoints(input);
+        } else {
+            this.input = input;
+        }
     }
 
     @Override
-    public List<CohenPoint> drawNeurons() {
+    public List<CohenNeuron> drawNeurons() {
         final Random seed = new Random();
-        final List<CohenPoint> cohenPointList = new ArrayList<>();
+        final List<CohenNeuron> neuronList = new ArrayList<>();
         final Double delta = Double.valueOf(CohenNetwork.getProperty(CohenNetwork.DELTA));
         final int neurons = Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW));
 
@@ -50,45 +58,77 @@ abstract public class CohenNetwork
             for (int k = 0 ; k < location.length ; k++) {
                 location[k] += delta * location[k];
             }
-            cohenPointList.add(new CohenPoint(location));
+            neuronList.add(new CohenNeuron(location));
         }
 
-        return cohenPointList;
+        return neuronList;
     }
 
     @Override
-    public CohenPoint findWinner(final CohenPoint neuron) {
-        List<Point> cohenPoints = new ArrayList<>(this.input);
-        Collections.sort(cohenPoints, new Comparator<Point>() {
+    public CohenNeuron findWinner(final CohenPoint randomPoint, final List<CohenNeuron> neurons) {
+        final int threshold = Integer.parseInt(CohenSOM.getProperty(CohenSOM.NEURON_THRESHOLD));
+        final List<CohenNeuron> activeNeurons = new ArrayList<>();
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(String.format("Threshold = %d", threshold));
+        }
+
+        // extract active
+        for (CohenNeuron neuron : neurons) {
+            if (neuron.isActive(threshold)) {
+                activeNeurons.add(neuron);
+            } else {
+                neuron.deactivate();
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(String.format("Deactivating neuron %d, activeStatus=%s", neuron.getId(), false));
+                }
+            }
+        }
+        // extract active
+
+        // sort against distance
+        Collections.sort(activeNeurons, new Comparator<CohenNeuron>() {
             @Override
-            public int compare(final Point o1, final Point o2) {
-                Double o1D = CohenUtilities.DistanceMetrics.getEuclideanDistance((CohenPoint) o1, neuron);
-                Double o2D = CohenUtilities.DistanceMetrics.getEuclideanDistance((CohenPoint) o2, neuron);
+            public int compare(final CohenNeuron o1, final CohenNeuron o2) {
+                Double o1D = cohenDistance.distance(o1, randomPoint);
+                Double o2D = cohenDistance.distance(o2, randomPoint);
                 return o1D.compareTo(o2D);
             }
         });
-        return (CohenPoint) cohenPoints.get(0);
+        // sort against distance
+
+
+        final CohenNeuron winner = activeNeurons.get(0);
+        winner.activate(threshold);
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(String.format("Activating neuron ID=[%d], activeStatus=%s", winner.getId(), true));
+        }
+
+        return winner;
     }
 
-    protected List<CohenPoint> findNeighbours(final CohenPoint winner) {
+    protected List<CohenNeuron> findNeighbours(final CohenNeuron winningNeuron) {
         final double radius = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS));
-        final List<CohenPoint> neighbours = new ArrayList<>();
-        List<Point> cohenPoints = new ArrayList<>(this.input);
-        Collections.sort(cohenPoints, new Comparator<Point>() {
+        final List<CohenNeuron> neighbours = new ArrayList<>();
+        List<CohenNeuron> copy = new ArrayList<>(this.neurons);
+        Collections.sort(copy, new Comparator<Point>() {
             @Override
             public int compare(final Point o1, final Point o2) {
-                Double o1D = cohenDistance.distance((CohenPoint) o1, winner);
-                Double o2D = cohenDistance.distance((CohenPoint) o2, winner);
+                Double o1D = cohenDistance.distance((CohenPoint) o1, winningNeuron);
+                Double o2D = cohenDistance.distance((CohenPoint) o2, winningNeuron);
                 return o1D.compareTo(o2D);
             }
         });
-        for (Point point : cohenPoints) {
-            if (cohenDistance.distance((CohenPoint) point, winner) <= radius && !winner.equals(point)) {
-                neighbours.add((CohenPoint) point);
+        for (CohenNeuron point : copy) {
+            if (this.cohenDistance.distance(point, winningNeuron) <= radius && !winningNeuron.equals(point)) {
+                neighbours.add(point);
             }
         }
         return neighbours;
     }
 
-    public abstract void updatePositions(final CohenPoint neuron, final CohenPoint winner, final List<CohenPoint> neighbours);
+    protected abstract void updatePositions(final CohenPoint closestPoint, final CohenPoint winningNeuron, final List<CohenNeuron> neighbours);
+
+    protected abstract boolean checkAgainstQuantumError(final CohenNeuron winningNeuron);
 }

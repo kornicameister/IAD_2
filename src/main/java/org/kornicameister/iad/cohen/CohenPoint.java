@@ -19,4 +19,6 @@ public class CohenPoint extends CPoint {
         point.position = this.position.clone();
         return point;
     }
+
+
 }

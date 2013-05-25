@@ -35,7 +35,7 @@ public class CohenSOMTest {
 
     @Test
     public void testDrawNeurons() throws Exception {
-        List<CohenPoint> pointList = this.cohenAlgorithm.drawNeurons();
+        List<CohenNeuron> pointList = this.cohenAlgorithm.drawNeurons();
         Assert.assertNotNull("Null drawnNeurons", pointList);
         Assert.assertTrue("Empty drawnNeurons", pointList.size() > 0);
     }

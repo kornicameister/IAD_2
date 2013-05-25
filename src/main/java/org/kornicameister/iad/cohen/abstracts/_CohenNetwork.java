@@ -23,6 +23,9 @@ public abstract class _CohenNetwork {
     protected static final String NEIGHBOUR_RADIUS = "org.kornicameister.iad.cohen.neighbourRadius";
     protected static final String NEIGHBOUR_FUNCTION = "org.kornicameister.iad.cohen.neighbourFunction";
     protected static final String LEARNING_FACTOR = "org.kornicameister.iad.cohen.learningFactor";
+    protected static final String NORMALIZE = "org.kornicameister.iad.cohen.normalize";
+    protected static final String NEURON_THRESHOLD = "org.kornicameister.iad.cohen.neuronThreshold";
+    protected static final String NETWORK_THRESHOLD = "org.kornicameister.iad.cohen.networkThreshold";
     private static final String COHEN_PROPERTIES = "src/main/resources/cohen.properties";
     private static final Logger LOGGER = Logger.getLogger(_CohenNetwork.class);
     private static Properties cohenProperties;
@@ -57,6 +60,9 @@ public abstract class _CohenNetwork {
         static final String DEFAULT_DELTA = "0.25";
         static final String DEFAULT_NEIGHBOUR_RADIUS = "1";
         static final String DEFAULT_LEARNING_FACTOR = "0.7";
+        static final String DEFAULT_NORMALIZE = "false";
+        static final String DEFAULT_NEURON_THRESHOLD = "10";
+        static final String DEFAULT_NETWORK_THRESHOLD = "0.1";
         static Map<String, String> defaultMap;
 
         static {
@@ -68,6 +74,9 @@ public abstract class _CohenNetwork {
             defaultMap.put(_CohenNetwork.NEIGHBOUR_RADIUS, Defaults.DEFAULT_NEIGHBOUR_RADIUS);
             defaultMap.put(_CohenNetwork.NEIGHBOUR_FUNCTION, Defaults.DEFAULT_NEIGHBOUR_FUNCTION);
             defaultMap.put(_CohenNetwork.LEARNING_FACTOR, Defaults.DEFAULT_LEARNING_FACTOR);
+            defaultMap.put(_CohenNetwork.NORMALIZE, Defaults.DEFAULT_NORMALIZE);
+            defaultMap.put(_CohenNetwork.NEURON_THRESHOLD, Defaults.DEFAULT_NEURON_THRESHOLD);
+            defaultMap.put(_CohenNetwork.NETWORK_THRESHOLD, Defaults.DEFAULT_NETWORK_THRESHOLD);
         }
     }
 
