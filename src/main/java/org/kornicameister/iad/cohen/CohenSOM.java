@@ -24,6 +24,10 @@ public class CohenSOM extends CohenNetwork {
         super(input, skipAuto, readProp);
     }
 
+    public CohenSOM(final List<CohenPoint> pointList, final int neuron) {
+        super(pointList, false, false, neuron);
+    }
+
     public static CohenSOM getCohenSOM(final List<CohenPoint> input,
                                        final List<CohenNeuron> neurons,
                                        final String outputPrefix,

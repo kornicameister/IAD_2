@@ -49,7 +49,7 @@ public class FileLoaderTest {
                 }
                 List<CohenPoint> pointList = FileLoader.load("data/165535-2.txt", new DefaultCohenFileReader(column[0], column[1], 8), ',');
                 GnuplotSaver.saveToFile(String.format("%s/%s", subDir.getAbsolutePath(), "points.txt"), pointList);
-                CohenSOM cohenAlgorithm = new CohenSOM(pointList);
+                CohenSOM cohenAlgorithm = new CohenSOM(pointList, neuron);
                 GnuplotSaver.saveToFile(String.format("%s/%s", subDir.getAbsolutePath(), "neurons.txt"), cohenAlgorithm.getNeurons());
             }
         }

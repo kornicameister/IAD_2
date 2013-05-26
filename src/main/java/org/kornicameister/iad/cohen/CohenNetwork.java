@@ -22,16 +22,23 @@ abstract public class CohenNetwork
     private static final Logger LOGGER = Logger.getLogger(CohenNetwork.class);
     protected final CohenNeighbourhoodFunction neighbourhoodFunction;
     protected final CohenDistance cohenDistance;
+    protected Integer enforcedKToDraw;
     protected List<CohenPoint> input;
     protected List<CohenNeuron> neurons;
-    protected double radius = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS));
-
+    protected double radius = 0.0;
+    protected double maxX = Double.MIN_VALUE,
+            maxY = Double.MIN_VALUE,
+            minX = Double.MAX_VALUE,
+            minY = Double.MAX_VALUE;
 
     public CohenNetwork(final List<CohenPoint> input) {
         super(false);
         this.setInput(input);
         this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
         this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        this.enforcedKToDraw = 0;
+        this.analyzeBoundaries();
+        this.updateNeighbourhoodRadius();
         this.neurons = this.drawNeurons2();
     }
 
@@ -40,6 +47,9 @@ abstract public class CohenNetwork
         this.setInput(input);
         this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
         this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        this.enforcedKToDraw = 0;
+        this.analyzeBoundaries();
+        this.updateNeighbourhoodRadius();
         if (!skipAuto) {
             this.neurons = this.drawNeurons2();
         }
@@ -50,9 +60,30 @@ abstract public class CohenNetwork
         this.setInput(input);
         this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
         this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        this.analyzeBoundaries();
+        this.updateNeighbourhoodRadius();
         if (!skipAuto) {
             this.neurons = this.drawNeurons2();
         }
+    }
+
+    public CohenNetwork(final List<CohenPoint> input, final boolean skipAuto, final boolean readProp, final int neuron) {
+        super(readProp);
+        this.setInput(input);
+        this.neighbourhoodFunction = (CohenNeighbourhoodFunction) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_FUNCTION));
+        this.cohenDistance = (CohenDistance) this.resolveObject(CohenNetwork.getProperty(CohenNetwork.METRIC));
+        this.analyzeBoundaries();
+        this.updateNeighbourhoodRadius();
+        this.enforcedKToDraw = neuron;
+        if (!skipAuto) {
+            this.neurons = this.drawNeurons2();
+        }
+    }
+
+    private void updateNeighbourhoodRadius() {
+        double radius = Double.parseDouble(CohenNetwork.getProperty(CohenNetwork.NEIGHBOUR_RADIUS));
+        double radius2 = Math.abs(this.maxX - this.minX) + Math.abs(this.minY - this.maxY);
+        this.radius = radius > radius2 ? radius : radius2;
     }
 
     public void setInput(List<CohenPoint> input) {
@@ -70,7 +101,9 @@ abstract public class CohenNetwork
         final Random seed = new Random();
         final List<CohenNeuron> neuronList = new ArrayList<>();
         final Double delta = Double.valueOf(CohenNetwork.getProperty(CohenNetwork.DELTA));
-        final int neurons = Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW));
+        final int neurons = this.enforcedKToDraw == 0 ?
+                Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW)) :
+                this.enforcedKToDraw;
 
         CohenPoint toBeModified;
         Double[] location;
@@ -89,13 +122,21 @@ abstract public class CohenNetwork
 
     public List<CohenNeuron> drawNeurons2() {
         final List<CohenNeuron> neuronList = new ArrayList<>();
-        final int neurons = Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW));
+        final int neurons = this.enforcedKToDraw == 0 ?
+                Integer.valueOf(CohenNetwork.getProperty(CohenNetwork.K_TO_DRAW)) :
+                this.enforcedKToDraw;
 
-        double maxX = Double.MIN_VALUE,
-                maxY = Double.MIN_VALUE,
-                minX = Double.MAX_VALUE,
-                minY = Double.MAX_VALUE;
+        for (int i = 0 ; i < neurons ; i++) {
+            neuronList.add(new CohenNeuron(
+                    RandomDouble.nextDouble(minX, maxX),
+                    RandomDouble.nextDouble(minY, maxY)
+            ));
+        }
 
+        return neuronList;
+    }
+
+    private void analyzeBoundaries() {
         for (CohenPoint point : this.input) {
             if (point.getX() > maxX) {
                 maxX = point.getX();
@@ -110,21 +151,12 @@ abstract public class CohenNetwork
                 minY = point.getY();
             }
         }
-
-
-        for (int i = 0 ; i < neurons ; i++) {
-            neuronList.add(new CohenNeuron(
-                    RandomDouble.nextDouble(minX, maxX),
-                    RandomDouble.nextDouble(minY, maxY)
-            ));
-        }
-
-        return neuronList;
     }
 
     @Override
     public CohenNeuron findWinner(final CohenPoint randomPoint, final List<CohenNeuron> neurons) {
-        final int threshold = Integer.parseInt(CohenSOM.getProperty(CohenSOM.NEURON_THRESHOLD));
+        final int thresholdRead = Integer.parseInt(CohenSOM.getProperty(CohenSOM.NEURON_THRESHOLD));
+        final int threshold = thresholdRead > this.neurons.size() ? this.neurons.size() : thresholdRead;
         final List<CohenNeuron> activeNeurons = new ArrayList<>();
 
         if (LOGGER.isTraceEnabled()) {
@@ -133,13 +165,16 @@ abstract public class CohenNetwork
 
         // extract active
         for (CohenNeuron neuron : neurons) {
-            if (neuron.isActive(threshold)) {
-                activeNeurons.add(neuron);
-            } else {
+            if (!neuron.isActive(threshold)) {
                 neuron.deactivate();
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(String.format("Deactivating neuron %d, activeStatus=%s", neuron.getId(), false));
                 }
+            }
+        }
+        for (CohenNeuron neuron : neurons) {
+            if (neuron.isActive(threshold)) {
+                activeNeurons.add(neuron);
             }
         }
         // extract active
