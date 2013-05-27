@@ -56,9 +56,8 @@ public class DefaultCohenFileReader implements CohenFileReader {
     protected Double[] readValues(final Scanner scanner) {
         String[] line = scanner.nextLine().split(" ");
         List<Double> doubles = new ArrayList<>();
-        for (int i = startColumn ; i <= endColumn ; i++) {
-            doubles.add(Double.parseDouble(line[i]));
-        }
+        doubles.add(Double.parseDouble(line[this.startColumn]));
+        doubles.add(Double.parseDouble(line[this.endColumn]));
         return doubles.toArray(new Double[]{});
     }
 
